@@ -1,0 +1,101 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Station {
+  id          Int                 @id @default(autoincrement())
+  brandId     Int
+  name        String
+  description String?
+  region      String?
+  town        String?
+  address     String?
+  postcode    String?
+  lat         Float?
+  lng         Float?
+  geom        Bytes?              
+  createdAt   DateTime            @default(now())
+  prices      StationPrice[]
+  facilities  StationFacilities[] @relation("StationToFacilities")
+  brand       Brand               @relation(fields: [brandId], references: [id])
+}
+
+model StationFacilities {
+  id          Int       @id @default(autoincrement())
+  stationId   Int
+  facilityId  Int
+  updatedAt   DateTime @updatedAt
+  station     Station  @relation(fields: [stationId], references: [id], name: "StationToFacilities")
+  facility    Facility @relation(fields: [facilityId], references: [id], name: "FacilityToStations")
+}
+
+model Facility {
+  id          Int                 @id @default(autoincrement())
+  name        String
+  description String?
+  categoryId  Int
+  stations    StationFacilities[] @relation("FacilityToStations")
+  category    FacilityCategory    @relation(fields: [categoryId], references: [id])
+}
+
+model StationPrice {
+  id        Int      @id @default(autoincrement())
+  stationId Int
+  fuelTypeId Int
+  price     Float
+  updatedAt DateTime @updatedAt
+  station   Station  @relation(fields: [stationId], references: [id])
+  fuelType  FuelType @relation(fields: [fuelTypeId], references: [id])
+}
+
+model FuelType {
+  id          Int           @id @default(autoincrement())
+  type        String
+  description String?
+  prices      StationPrice[]
+}
+
+model User {
+  id        Int    @id @default(autoincrement())
+  username  String @unique
+  roleId    Int
+  password  String
+  avatar    String?
+  createdAt DateTime @default(now())
+  role      Role    @relation(fields: [roleId], references: [id])
+}
+
+model Role {
+  id          Int    @id @default(autoincrement())
+  role        String
+  description String?
+  users       User[]
+}
+
+model Brand {
+  id          Int       @id @default(autoincrement())
+  name        String
+  description String?
+  logo        String?
+  stations    Station[]
+}
+
+
+model FacilityCategory {
+  id          Int        @id @default(autoincrement())
+  name        String
+  description String?
+  facilities  Facility[]
+}
